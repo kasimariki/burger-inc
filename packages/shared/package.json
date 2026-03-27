@@ -1,0 +1,11 @@
+{
+  "name": "@burger-inc/shared",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "~5.9.2"
+  }
+}
