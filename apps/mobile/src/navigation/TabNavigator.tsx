@@ -1,4 +1,5 @@
 import { Platform, View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useGameStore } from "../store/gameStore";
@@ -202,17 +203,24 @@ const headerStyles = StyleSheet.create({
 
 // ---- Tab Icon Component ----
 
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+
 interface TabIconProps {
   label: string;
-  icon: string;
+  iconActive: IoniconsName;
+  iconInactive: IoniconsName;
   focused: boolean;
 }
 
-function TabIcon({ label, icon, focused }: TabIconProps) {
+function TabIcon({ label, iconActive, iconInactive, focused }: TabIconProps) {
   return (
     <View style={tabStyles.item}>
       <View style={[tabStyles.iconBox, focused && tabStyles.iconBoxActive]}>
-        <Text style={[tabStyles.iconText, focused && tabStyles.iconTextActive]}>{icon}</Text>
+        <Ionicons
+          name={focused ? iconActive : iconInactive}
+          size={18}
+          color={focused ? "#fff" : C.textMuted}
+        />
       </View>
       <Text style={[tabStyles.label, focused && tabStyles.labelActive]}>{label}</Text>
     </View>
@@ -223,8 +231,6 @@ const tabStyles = StyleSheet.create({
   item: { alignItems: "center", gap: 3 },
   iconBox: { width: 32, height: 32, borderRadius: 10, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" },
   iconBoxActive: { backgroundColor: C.accent },
-  iconText: { color: C.textMuted, fontSize: 13, fontWeight: "800" },
-  iconTextActive: { color: "#fff" },
   label: { fontSize: 10, color: C.textMuted, fontWeight: "600" },
   labelActive: { color: C.accent, fontWeight: "700" },
 });
@@ -253,35 +259,45 @@ export default function TabNavigator() {
         name="DashboardTab"
         component={DashboardTabStack}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Dashboard" icon="D" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon label="Dashboard" iconActive="home" iconInactive="home-outline" focused={focused} />
+          ),
         }}
       />
       <Tab.Screen
         name="StoresTab"
         component={StoresTabStack}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Stores" icon="S" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon label="Stores" iconActive="storefront" iconInactive="storefront-outline" focused={focused} />
+          ),
         }}
       />
       <Tab.Screen
         name="MenuTab"
         component={MenuTabStack}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Menu" icon="M" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon label="Menu" iconActive="fast-food" iconInactive="fast-food-outline" focused={focused} />
+          ),
         }}
       />
       <Tab.Screen
         name="StaffTab"
         component={StaffTabStack}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Staff" icon="H" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon label="Staff" iconActive="people" iconInactive="people-outline" focused={focused} />
+          ),
         }}
       />
       <Tab.Screen
         name="FinanceTab"
         component={FinanceTabStack}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Finance" icon="F" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon label="Finance" iconActive="stats-chart" iconInactive="stats-chart-outline" focused={focused} />
+          ),
         }}
       />
     </Tab.Navigator>

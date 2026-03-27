@@ -4,6 +4,7 @@ import { getInitialGameState, processTurn } from "../game/engine/turn";
 import { openStore, hireStaff, addMenuItem, assignStaffToStore, addMenuToStore } from "../game/engine/actions";
 import { buildBurger, initializeIngredients } from "../game/engine/menu-builder";
 import { saveGame, loadGame } from "../services/api";
+import { saveLocal, loadLocal } from "../services/local-storage";
 
 const USER_ID = "user-001"; // 後でAuth実装
 const USER_NAME = "プレイヤー1";
@@ -28,8 +29,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   prevGame: null,
   isSaving: false,
 
-  processTurn: () =>
-    set((s) => ({ prevGame: s.game, game: processTurn(s.game) })),
+  processTurn: () => {
+    set((s) => ({ prevGame: s.game, game: processTurn(s.game) }));
+    // ターン進行ごとにオートセーブ（非同期・エラーは無視）
+    saveLocal(get().game).catch(() => undefined);
+  },
 
   openStore: (store) =>
     set((s) => ({ game: openStore(s.game, store) })),
@@ -51,14 +55,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   save: async () => {
     set({ isSaving: true });
-    await saveGame(USER_ID, USER_NAME, get().game);
+    const game = get().game;
+    // APIとローカル両方に保存（並行実行）
+    await Promise.all([
+      saveGame(USER_ID, USER_NAME, game),
+      saveLocal(game),
+    ]);
     set({ isSaving: false });
   },
 
   load: async () => {
-    const data = await loadGame(USER_ID);
-    if (data?.gameState) {
-      set({ game: data.gameState });
+    // まずAPIから試み、失敗したらローカルから読む
+    try {
+      const data = await loadGame(USER_ID);
+      if (data?.gameState) {
+        set({ game: data.gameState });
+        return;
+      }
+    } catch {
+      // API失敗時はローカルにフォールバック
+    }
+    const localData = await loadLocal();
+    if (localData) {
+      set({ game: localData });
     }
   },
 }));

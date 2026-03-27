@@ -108,7 +108,7 @@ export function buildBurger(state: GameState, input: BuildBurgerInput): GameStat
   // コスト計算
   const cost = calcMenuCost(patty, bun, toppings, sauce);
   const devCost = GAME_CONFIG.menu.developmentCostRange[0]
-    + (patty.quality + bun.quality + sauce.quality) * 150;
+    + (patty.quality + bun.quality + sauce.quality) * 80;
 
   if (state.finances.cash < devCost) {
     throw new Error(`開発資金が不足しています (必要: $${devCost})`);

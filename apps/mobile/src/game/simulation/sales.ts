@@ -1,5 +1,21 @@
 import type { Store, MenuItem, Staff, MacroEconomy } from "../models/types";
 
+// メニュー数による来客ボーナス
+function calcMenuCountMultiplier(menuItemCount: number): number {
+  if (menuItemCount >= 3) return 1.0;
+  if (menuItemCount === 2) return 0.85;
+  if (menuItemCount === 1) return 0.7;
+  return 0; // メニュー0品は来客なし
+}
+
+// スタッフ数によるサービスボーナス
+function calcStaffServiceMultiplier(staffCount: number): number {
+  if (staffCount >= 3) return 1.0;
+  if (staffCount === 2) return 0.9;
+  if (staffCount === 1) return 0.7;
+  return 0.3; // スタッフ0人はセルフサービス
+}
+
 // 1ターン（1週間）の来客数を計算
 export function calcWeeklyCustomers(
   store: Store,
@@ -8,10 +24,16 @@ export function calcWeeklyCustomers(
 ): number {
   const avgTaste = calcAvgTasteScore(store, menu);
   const economyMultiplier = getEconomyMultiplier(economy);
-  const baseCustomers = store.capacity * 0.6; // 基本60%稼働
+  const baseCustomers = store.capacity * 0.5; // 基本50%稼働
+
+  const menuItemCount = store.menuItemIds.filter(id => menu[id]).length;
+  const menuMultiplier = calcMenuCountMultiplier(menuItemCount);
+
+  const staffCount = store.staffIds.length;
+  const staffMultiplier = calcStaffServiceMultiplier(staffCount);
 
   const tasteBonus = (avgTaste / 100) * store.capacity * 0.3;
-  return Math.floor((baseCustomers + tasteBonus) * economyMultiplier);
+  return Math.floor((baseCustomers + tasteBonus) * economyMultiplier * menuMultiplier * staffMultiplier);
 }
 
 // 1ターンの売上を計算

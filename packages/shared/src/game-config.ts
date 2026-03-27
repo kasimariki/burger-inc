@@ -15,7 +15,7 @@ export const GAME_CONFIG = {
   // --- メニュー ---
   menu: {
     maxMenuItems: 20,
-    developmentCostRange: [500, 5000] as const,
+    developmentCostRange: [300, 3000] as const,
     developmentTurnsRange: [1, 4] as const,
     tasteScoreFactors: {
       ingredients: 0.4,
@@ -58,8 +58,8 @@ export const GAME_CONFIG = {
       drive_through: { capacityRange: [100, 300] as const, rentMultiplier: 1.3 },
       food_truck: { capacityRange: [20, 60] as const, rentMultiplier: 0.4 },
     },
-    openingCostMonths: 3, // 初期費用 = 家賃×この月数
-    baseOccupancyRate: 0.6,
+    openingCostMonths: 2, // 初期費用 = 家賃×この月数
+    baseOccupancyRate: 0.5,
   },
 
   // --- マクロ経済 ---
