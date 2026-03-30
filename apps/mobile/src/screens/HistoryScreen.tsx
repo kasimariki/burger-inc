@@ -9,9 +9,9 @@ import {
   StyleSheet,
 } from "react-native";
 import { fetchTurnHistory, type TurnSnapshot } from "../services/api";
+import { useGameStore } from "../store/gameStore";
 import { C } from "../theme";
 
-const USER_ID = "user-001";
 const SLOT_ID = 1;
 const SCREEN_W = Dimensions.get("window").width - 28; // padding
 const CHART_H = 160;
@@ -72,13 +72,14 @@ function MiniChart({ data, metric }: { data: TurnSnapshot[]; metric: typeof METR
 }
 
 export default function HistoryScreen() {
+  const { userId } = useGameStore();
   const [history, setHistory] = useState<TurnSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMetric, setSelectedMetric] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const data = await fetchTurnHistory(USER_ID, SLOT_ID);
+      const data = await fetchTurnHistory(userId, SLOT_ID);
       setHistory(data ?? []);
       setLoading(false);
     })();

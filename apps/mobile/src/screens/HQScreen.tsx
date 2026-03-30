@@ -16,9 +16,8 @@ import {
   type Department,
   type Executive,
 } from "../services/api";
+import { useGameStore } from "../store/gameStore";
 import { C } from "../theme";
-
-const USER_ID = "user-001";
 
 const DEPT_INFO: Record<string, { label: string; icon: string; desc: string; setupCost: number }> = {
   operations: { label: "Operations", icon: "OPS", desc: "Store efficiency & logistics", setupCost: 5000 },
@@ -35,6 +34,7 @@ const EXEC_INFO: Record<string, { label: string; dept: string; desc: string; bas
 };
 
 export default function HQScreen() {
+  const { userId } = useGameStore();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [executives, setExecutives] = useState<Executive[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export default function HQScreen() {
 
   const reload = async () => {
     setLoading(true);
-    const data = await fetchHQ(USER_ID);
+    const data = await fetchHQ(userId);
     setDepartments(data.departments ?? []);
     setExecutives(data.executives ?? []);
     setLoading(false);
@@ -63,7 +63,7 @@ export default function HQScreen() {
       [
         { text: "Cancel", style: "cancel" },
         { text: "Establish", onPress: async () => {
-          await createDepartment(USER_ID, key);
+          await createDepartment(userId, key);
           await reload();
         }},
       ]
@@ -76,7 +76,7 @@ export default function HQScreen() {
       return;
     }
     const info = EXEC_INFO[selectedRole];
-    await hireExecutive(USER_ID, selectedRole, execName.trim(), info.baseSalary);
+    await hireExecutive(userId, selectedRole, execName.trim(), info.baseSalary);
     setExecName("");
     setSelectedRole(null);
     await reload();

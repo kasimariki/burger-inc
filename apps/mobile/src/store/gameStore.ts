@@ -4,12 +4,17 @@ import { getInitialGameState, processTurn } from "../game/engine/turn";
 import { openStore, hireStaff, addMenuItem, assignStaffToStore, addMenuToStore } from "../game/engine/actions";
 import { buildBurger, initializeIngredients } from "../game/engine/menu-builder";
 import { calcBrandConsistency, calcBrandScoreDelta } from "../game/engine/brand";
-import { saveGame, loadGame, saveSnapshot, saveTurnSnapshot, fetchCityStatus, checkCityUnlock } from "../services/api";
+import {
+  saveGame, loadGame, saveTurnSnapshot,
+  submitWeeklyFeedback, updateBrandProfile,
+  getMe, fetchCityStatus, checkCityUnlock,
+  type StoreMetricsInput,
+} from "../services/api";
 import { saveLocal, loadLocal } from "../services/local-storage";
 
-const USER_ID = "user-001"; // 後でAuth実装
-const USER_NAME = "プレイヤー1";
-const SLOT_ID = "1";
+const DEFAULT_USER_ID = "user-001";
+const DEFAULT_USER_NAME = "プレイヤー1";
+const SLOT_ID = 1;
 
 interface GameStore {
   game: GameState;
@@ -17,6 +22,8 @@ interface GameStore {
   isSaving: boolean;
   profitHistory: { turn: number; netProfit: number }[];
   cityStatuses: CityStatus[];
+  userId: string;
+  userName: string;
   processTurn: () => void;
   openStore: (store: Parameters<typeof openStore>[1]) => void;
   hireStaff: (staff: Parameters<typeof hireStaff>[1]) => void;
@@ -30,6 +37,7 @@ interface GameStore {
   checkAndUnlockCities: () => Promise<string[]>;
   save: () => Promise<void>;
   load: () => Promise<void>;
+  initAuth: () => Promise<void>;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -38,6 +46,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isSaving: false,
   profitHistory: [],
   cityStatuses: [],
+  userId: DEFAULT_USER_ID,
+  userName: DEFAULT_USER_NAME,
+
+  initAuth: async () => {
+    try {
+      const me = await getMe();
+      if (me) {
+        set({ userId: me.userId, userName: me.name });
+      }
+    } catch {
+      // 自動登録はauthFetch内で処理される
+    }
+  },
 
   processTurn: () => {
     const prevGame = get().game;
@@ -51,22 +72,74 @@ export const useGameStore = create<GameStore>((set, get) => ({
         { turn: prevGame.turn, netProfit: weeklyProfit },
       ],
     }));
-    saveLocal(nextGame).catch(() => undefined);
-    // ターン進行ごとにスナップショット送信（非同期・エラーは無視）
-    const stores = Object.values(nextGame.stores);
+
+    const g = get().game;
+    const { userId } = get();
+
+    // ターン進行ごとにオートセーブ + スナップショット送信（非同期・エラーは無視）
+    saveLocal(g).catch(() => undefined);
+
+    const stores = Object.values(g.stores);
     const avgRep = stores.length > 0
       ? stores.reduce((sum, s) => sum + s.reputation, 0) / stores.length
       : 0;
-    saveTurnSnapshot(USER_ID, Number(SLOT_ID), {
-      turnNumber: nextGame.turn,
-      cash: nextGame.finances.cash,
-      weeklyRevenue: nextGame.finances.weeklyRevenue,
-      weeklyExpenses: nextGame.finances.weeklyExpenses,
-      netProfit: weeklyProfit,
+
+    saveTurnSnapshot(userId, SLOT_ID, {
+      turnNumber: g.turn,
+      cash: g.finances.cash,
+      weeklyRevenue: g.finances.weeklyRevenue,
+      weeklyExpenses: g.finances.weeklyExpenses,
+      netProfit: g.finances.weeklyRevenue - g.finances.weeklyExpenses,
       avgReputation: avgRep,
       storeCount: stores.length,
-      brandScore: nextGame.brandScore,
+      brandScore: g.brandScore,
     }).catch(() => undefined);
+
+    // WeeklyFeedback送信（店舗がある場合のみ）
+    if (stores.length > 0) {
+      const storeMetrics: StoreMetricsInput[] = stores.map((store) => {
+        const storeStaff = store.staffIds
+          .map((sid: string) => g.staff[sid])
+          .filter(Boolean);
+        const storeMenus = store.menuItemIds
+          .map((mid: string) => g.menu[mid])
+          .filter(Boolean);
+        const avgSkill = storeStaff.length > 0
+          ? storeStaff.reduce((sum: number, s: { skillLevel: number }) => sum + s.skillLevel, 0) / storeStaff.length
+          : 0;
+        const avgTaste = storeMenus.length > 0
+          ? storeMenus.reduce((sum: number, m: { tasteScore: number }) => sum + m.tasteScore, 0) / storeMenus.length
+          : 0;
+        const avgPrice = storeMenus.length > 0
+          ? storeMenus.reduce((sum: number, m: { price: number }) => sum + m.price, 0) / storeMenus.length
+          : 0;
+
+        return {
+          storeId: store.id,
+          staffCount: storeStaff.length,
+          capacity: store.capacity,
+          avgSkillLevel: avgSkill,
+          cleanliness: store.cleanliness,
+          avgTasteScore: avgTaste,
+          avgMenuPrice: avgPrice,
+          currentReputation: store.reputation,
+        };
+      });
+
+      submitWeeklyFeedback(userId, SLOT_ID, g.turn, storeMetrics).catch(() => undefined);
+    }
+
+    // BrandProfile更新
+    const menus = Object.values(g.menu).map((m: { tasteScore: number; price: number }) => ({
+      tasteScore: m.tasteScore,
+      price: m.price,
+    }));
+    updateBrandProfile(userId, {
+      slotId: SLOT_ID,
+      brandScore: g.brandScore,
+      menus,
+    }).catch(() => undefined);
+
     // セーブ後に都市解禁チェック（非同期、エラーは無視）
     get().checkAndUnlockCities().catch(() => undefined);
   },
@@ -115,7 +188,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
 
   refreshCityStatus: async () => {
-    const data = await fetchCityStatus(USER_ID, SLOT_ID);
+    const { userId } = get();
+    const data = await fetchCityStatus(userId, SLOT_ID);
     if (Array.isArray(data)) {
       set({ cityStatuses: data });
     }
@@ -123,9 +197,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   checkAndUnlockCities: async () => {
     const game = get().game;
+    const { userId } = get();
     const storeCount = Object.keys(game.stores).length;
     const result = await checkCityUnlock(
-      USER_ID, SLOT_ID,
+      userId, String(SLOT_ID),
       game.brandProfile.brandScore,
       storeCount,
       game.finances.cash
@@ -143,16 +218,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   save: async () => {
     set({ isSaving: true });
-    const game = get().game;
+    const { game, userId, userName } = get();
+    // APIとローカル両方に保存（並行実行）
     await Promise.all([
-      saveGame(USER_ID, USER_NAME, game),
-      saveSnapshot(USER_ID, SLOT_ID, game),
+      saveGame(userId, userName, game, SLOT_ID).catch(() => undefined),
       saveLocal(game),
     ]);
     set({ isSaving: false });
   },
 
   load: async () => {
+    const { userId } = get();
     // まずAPIから試み、失敗したらローカルから読む
     const applyMigration = (gs: GameState): GameState => ({
       ...gs,
@@ -171,7 +247,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     try {
-      const data = await loadGame(USER_ID);
+      const data = await loadGame(userId, SLOT_ID);
       if (data?.gameState) {
         set({ game: applyMigration(data.gameState) });
         return;

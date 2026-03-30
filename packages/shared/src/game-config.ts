@@ -59,7 +59,7 @@ export const GAME_CONFIG = {
       food_truck: { capacityRange: [20, 60] as const, rentMultiplier: 0.4 },
     },
     openingCostMonths: 2, // 初期費用 = 家賃×この月数
-    baseOccupancyRate: 0.5,
+    baseOccupancyRate: 0.6,
   },
 
   // --- マクロ経済 ---
@@ -70,16 +70,16 @@ export const GAME_CONFIG = {
     interestRateRange: [0.005, 0.08] as const,
     inflationRange: [0.005, 0.06] as const,
     phaseDefaults: {
-      boom: { consumerConfidence: 80, interestRate: 0.05, inflationRate: 0.03 },
-      recession: { consumerConfidence: 55, interestRate: 0.04, inflationRate: 0.02 },
-      depression: { consumerConfidence: 30, interestRate: 0.01, inflationRate: 0.005 },
-      recovery: { consumerConfidence: 60, interestRate: 0.02, inflationRate: 0.015 },
+      boom: { consumerConfidence: 85, interestRate: 0.05, inflationRate: 0.03 },
+      recession: { consumerConfidence: 60, interestRate: 0.04, inflationRate: 0.02 },
+      depression: { consumerConfidence: 40, interestRate: 0.01, inflationRate: 0.005 },
+      recovery: { consumerConfidence: 65, interestRate: 0.02, inflationRate: 0.015 },
     },
     economyMultiplier: {
       boom: 1.3,
-      recovery: 1.1,
-      recession: 0.85,
-      depression: 0.65,
+      recovery: 1.15,
+      recession: 0.9,
+      depression: 0.75,
     },
   },
 

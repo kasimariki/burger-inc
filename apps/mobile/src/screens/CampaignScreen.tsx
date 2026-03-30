@@ -20,12 +20,11 @@ import {
 } from "../services/api";
 import { C } from "../theme";
 
-const USER_ID = "user-001";
 const SLOT_ID = 1;
 const MAX_ACTIVE = 2;
 
 export default function CampaignScreen() {
-  const { game } = useGameStore();
+  const { game, userId } = useGameStore();
   const [types, setTypes] = useState<CampaignType[]>([]);
   const [active, setActive] = useState<Campaign[]>([]);
   const [history, setHistory] = useState<Campaign[]>([]);
@@ -36,8 +35,8 @@ export default function CampaignScreen() {
     setLoading(true);
     const [t, a, h] = await Promise.all([
       fetchCampaignTypes(),
-      fetchActiveCampaigns(USER_ID, SLOT_ID),
-      fetchCampaignHistory(USER_ID, SLOT_ID),
+      fetchActiveCampaigns(userId, SLOT_ID),
+      fetchCampaignHistory(userId, SLOT_ID),
     ]);
     setTypes(t ?? []);
     setActive(a ?? []);
@@ -59,7 +58,7 @@ export default function CampaignScreen() {
       Alert.alert("Not Enough Cash", `Need $${ct.cost.toLocaleString()}.`);
       return;
     }
-    await startCampaign(USER_ID, SLOT_ID, ct.type, game.turn);
+    await startCampaign(userId, SLOT_ID, ct.id, game.turn);
     await reload();
   };
 
@@ -67,7 +66,7 @@ export default function CampaignScreen() {
     Alert.alert("Cancel Campaign?", "No refund will be given.", [
       { text: "Keep", style: "cancel" },
       { text: "Cancel It", style: "destructive", onPress: async () => {
-        await cancelCampaign(USER_ID, c.id);
+        await cancelCampaign(userId, c.id);
         await reload();
       }},
     ]);
@@ -112,12 +111,12 @@ export default function CampaignScreen() {
 
       {/* Launch tab */}
       {tab === "launch" && types.map(ct => {
-        const alreadyActive = active.some(a => a.type === ct.type);
+        const alreadyActive = active.some(a => a.type === ct.id);
         const canAfford = game.finances.cash >= ct.cost;
         const disabled = alreadyActive || !canAfford || active.length >= MAX_ACTIVE;
 
         return (
-          <View key={ct.type} style={styles.card}>
+          <View key={ct.id} style={styles.card}>
             <View style={styles.cardTop}>
               <Text style={styles.cardIcon}>{ct.icon}</Text>
               <View style={{ flex: 1 }}>
