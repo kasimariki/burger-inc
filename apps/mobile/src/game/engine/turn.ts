@@ -70,7 +70,7 @@ export function getInitialGameState(): GameState {
       phase: "boom",
       interestRate: 0.03,
       inflationRate: 0.02,
-      consumerConfidence: 70,
+      consumerConfidence: 80,  // 70→80: 序盤は好況スタート
       turnsInPhase: 0,
     },
     brandScore: 50,

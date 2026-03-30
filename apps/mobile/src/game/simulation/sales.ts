@@ -24,7 +24,7 @@ export function calcWeeklyCustomers(
 ): number {
   const avgTaste = calcAvgTasteScore(store, menu);
   const economyMultiplier = getEconomyMultiplier(economy);
-  const baseCustomers = store.capacity * 0.5; // 基本50%稼働
+  const baseCustomers = store.capacity * 0.6; // 基本60%稼働（50→60に引き上げ）
 
   const menuItemCount = store.menuItemIds.filter(id => menu[id]).length;
   const menuMultiplier = calcMenuCountMultiplier(menuItemCount);
@@ -32,8 +32,13 @@ export function calcWeeklyCustomers(
   const staffCount = store.staffIds.length;
   const staffMultiplier = calcStaffServiceMultiplier(staffCount);
 
-  const tasteBonus = (avgTaste / 100) * store.capacity * 0.3;
-  return Math.floor((baseCustomers + tasteBonus) * economyMultiplier * menuMultiplier * staffMultiplier);
+  // tasteBonus: 品質が高いほど来客が増える（capacity × 0.4に引き上げ）
+  const tasteBonus = (avgTaste / 100) * store.capacity * 0.4;
+
+  // reputation bonus: 評判が高いほど来客が増える
+  const repBonus = (store.reputation / 100) * store.capacity * 0.15;
+
+  return Math.floor((baseCustomers + tasteBonus + repBonus) * economyMultiplier * menuMultiplier * staffMultiplier);
 }
 
 // 1ターンの売上を計算
@@ -90,8 +95,8 @@ function getEconomyMultiplier(economy: MacroEconomy): number {
   const base = economy.consumerConfidence / 100;
   switch (economy.phase) {
     case "boom":       return base * 1.3;
-    case "recovery":   return base * 1.1;
-    case "recession":  return base * 0.85;
-    case "depression": return base * 0.65;
+    case "recovery":   return base * 1.15;
+    case "recession":  return base * 0.9;
+    case "depression": return base * 0.75;  // 0.65→0.75: 不況でも最低限の来客を確保
   }
 }
