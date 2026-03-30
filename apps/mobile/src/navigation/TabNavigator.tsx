@@ -22,12 +22,14 @@ import MenuLabScreen from "../screens/MenuLabScreen";
 import StaffScreen from "../screens/StaffScreen";
 import StoreListScreen from "../screens/StoreListScreen";
 import StoreDetailScreen from "../screens/StoreDetailScreen";
+import CitiesScreen from "../screens/CitiesScreen";
 import MenuListScreen from "../screens/MenuListScreen";
 import StaffListScreen from "../screens/StaffListScreen";
 import FinanceScreen from "../screens/FinanceScreen";
 import CampaignScreen from "../screens/CampaignScreen";
 import HQScreen from "../screens/HQScreen";
 import HistoryScreen from "../screens/HistoryScreen";
+import SupplierScreen from "../screens/SupplierScreen";
 
 // ---- Stack Navigators ----
 
@@ -103,6 +105,11 @@ function StoresTabStack() {
         component={StoreDetailScreenWrapper}
         options={{ title: "Store Detail" }}
       />
+      <StoresStack.Screen
+        name="CitiesScreen"
+        component={CitiesScreen}
+        options={{ title: "Cities" }}
+      />
     </StoresStack.Navigator>
   );
 }
@@ -149,6 +156,11 @@ function FinanceTabStack() {
         name="HistoryScreen"
         component={HistoryScreen}
         options={{ title: "Turn History" }}
+      />
+      <FinanceStack.Screen
+        name="SupplierScreen"
+        component={SupplierScreen}
+        options={{ title: "Suppliers" }}
       />
     </FinanceStack.Navigator>
   );

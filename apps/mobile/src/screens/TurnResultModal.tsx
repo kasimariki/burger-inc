@@ -9,6 +9,7 @@ import {
   Platform,
 } from "react-native";
 import type { GameState } from "../game/models/types";
+import { calcAllWarnings } from "../game/engine/feedback";
 
 const C = {
   bg: "#0d1117",
@@ -42,6 +43,7 @@ export default function TurnResultModal({
   const profit = revenue - expenses;
 
   const brandDelta = currentGame.brandScore - prevGame.brandScore;
+  const warnings = calcAllWarnings(currentGame);
 
   // 新しく発生したイベント（前のターンにはなかったもの）
   const prevEventIds = new Set(prevGame.activeEvents.map((e) => e.id));
@@ -180,6 +182,28 @@ export default function TurnResultModal({
             {newEvents.length === 0 && (
               <View style={styles.quietCard}>
                 <Text style={styles.quietText}>No new events this week</Text>
+              </View>
+            )}
+
+            {/* Store Warnings */}
+            {warnings.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.cardLabel}>STORE WARNINGS</Text>
+                {warnings.map((w, i) => (
+                  <View
+                    key={`${w.storeId}-${i}`}
+                    style={[
+                      styles.warningRow,
+                      i < warnings.length - 1 && styles.warningRowBorder,
+                    ]}
+                  >
+                    <Text style={styles.warnIcon}>⚠</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.warnStore}>{w.storeName}</Text>
+                      <Text style={styles.warnMsg}>{w.message}</Text>
+                    </View>
+                  </View>
+                ))}
               </View>
             )}
 
@@ -354,6 +378,34 @@ const styles = StyleSheet.create({
   },
   cashLabel: { color: C.textDim, fontSize: 13 },
   cashValue: { color: C.green, fontSize: 18, fontWeight: "900" },
+
+  // Warnings
+  warningRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    paddingVertical: 10,
+  },
+  warningRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#21262d",
+  },
+  warnIcon: {
+    fontSize: 14,
+    color: "#e8a838",
+    marginTop: 1,
+  },
+  warnStore: {
+    color: "#e6edf3",
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: 2,
+  },
+  warnMsg: {
+    color: "#7d8590",
+    fontSize: 11,
+    lineHeight: 16,
+  },
 
   // Footer
   footer: {

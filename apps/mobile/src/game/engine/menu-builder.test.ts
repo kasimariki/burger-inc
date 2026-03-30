@@ -133,10 +133,10 @@ describe("buildBurger", () => {
     });
 
     const menus = Object.values(result.menu);
-    expect(menus.length).toBe(1);
-    expect(menus[0].name).toBe("テストバーガー");
-    expect(menus[0].category).toBe("burger");
-    expect(menus[0].recipe).toBeDefined();
+    const newBurger = menus.find(m => m.name === "テストバーガー")!;
+    expect(newBurger).toBeDefined();
+    expect(newBurger.category).toBe("burger");
+    expect(newBurger.recipe).toBeDefined();
     expect(result.finances.cash).toBeLessThan(state.finances.cash);
   });
 

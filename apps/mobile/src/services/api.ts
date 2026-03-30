@@ -201,9 +201,14 @@ export interface Supplier {
 }
 
 export async function fetchSuppliers(): Promise<Supplier[]> {
-  const res = await fetch(`${API_BASE}/api/suppliers`);
-  const data = await res.json();
-  return data.suppliers;
+  try {
+    const res = await fetch(`${API_BASE}/api/suppliers`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.suppliers;
+  } catch {
+    return [];
+  }
 }
 
 export async function contractSupplier(userId: string, supplierId: string, pricePerUnit: number, durationWeeks?: number) {
@@ -213,4 +218,127 @@ export async function contractSupplier(userId: string, supplierId: string, price
     body: JSON.stringify({ userId, supplierId, pricePerUnit, durationWeeks }),
   });
   return res.json();
+}
+
+export async function signSupplierContract(userId: string, slotId: string, supplierId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/api/suppliers/contract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, slotId, supplierId }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchStoreFeedback(userId: string, slotId: string, gameState: object) {
+  try {
+    const res = await fetch(`${API_BASE}/api/game/${userId}/${slotId}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gameState }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchProfitHistory(userId: string, slotId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/api/game/${userId}/${slotId}/history`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSnapshot(userId: string, slotId: string, gameState: object) {
+  try {
+    const res = await fetch(`${API_BASE}/api/game/${userId}/${slotId}/snapshot`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gameState }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchBrandProfile(userId: string, slotId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/api/game/${userId}/brand?slotId=${slotId}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchCities() {
+  try {
+    const res = await fetch(`${API_BASE}/api/cities`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchCityStatus(userId: string, slotId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/api/cities/${userId}/status?slotId=${slotId}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function checkCityUnlock(
+  userId: string,
+  slotId: string,
+  brandScore: number,
+  storeCount: number,
+  cash: number
+) {
+  try {
+    const res = await fetch(`${API_BASE}/api/cities/${userId}/check-unlock`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slotId, brandScore, storeCount, cash }),
+    });
+    if (!res.ok) return null;
+    return res.json() as Promise<{ newlyUnlocked: string[]; totalUnlocked: string[] }>;
+  } catch {
+    return null;
+  }
+}
+
+export async function syncBrandProfile(userId: string, data: {
+  slotId: string;
+  positioning: string;
+  brandScore: number;
+  avgRating: number;
+  adSpend: number;
+  menus: { tasteScore: number; price: number }[];
+}) {
+  try {
+    const res = await fetch(`${API_BASE}/api/game/${userId}/brand`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }

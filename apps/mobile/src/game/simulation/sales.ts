@@ -13,16 +13,18 @@ function calcStaffServiceMultiplier(staffCount: number): number {
   if (staffCount >= 3) return 1.0;
   if (staffCount === 2) return 0.9;
   if (staffCount === 1) return 0.7;
-  return 0.3; // スタッフ0人はセルフサービス
+  return 0; // スタッフなしは営業不可
 }
 
 // 1ターン（1週間）の来客数を計算
 export function calcWeeklyCustomers(
   store: Store,
   menu: Record<string, MenuItem>,
-  economy: MacroEconomy
+  economy: MacroEconomy,
+  supplierQualityBonus: number = 0
 ): number {
-  const avgTaste = calcAvgTasteScore(store, menu);
+  const rawTaste = calcAvgTasteScore(store, menu);
+  const avgTaste = Math.min(100, rawTaste + supplierQualityBonus);
   const economyMultiplier = getEconomyMultiplier(economy);
   const baseCustomers = store.capacity * 0.5; // 基本50%稼働
 
@@ -40,9 +42,10 @@ export function calcWeeklyCustomers(
 export function calcWeeklyRevenue(
   store: Store,
   menu: Record<string, MenuItem>,
-  economy: MacroEconomy
+  economy: MacroEconomy,
+  supplierQualityBonus: number = 0
 ): number {
-  const customers = calcWeeklyCustomers(store, menu, economy);
+  const customers = calcWeeklyCustomers(store, menu, economy, supplierQualityBonus);
   const avgPrice = calcAvgMenuPrice(store, menu);
   return Math.round(customers * avgPrice);
 }
@@ -52,15 +55,17 @@ export function calcWeeklyExpenses(
   store: Store,
   staff: Record<string, Staff>,
   menu: Record<string, MenuItem>,
-  economy: MacroEconomy
+  economy: MacroEconomy,
+  supplierCostMultiplier: number = 1,
+  supplierQualityBonus: number = 0
 ): number {
   const weeklyRent = store.rent / 4;
   const weeklySalaries = store.staffIds
     .map(id => staff[id]?.salary ?? 0)
     .reduce((a, b) => a + b, 0) / 4;
-  const customers = calcWeeklyCustomers(store, menu, economy);
+  const customers = calcWeeklyCustomers(store, menu, economy, supplierQualityBonus);
   const avgCost = calcAvgMenuCost(store, menu);
-  const foodCost = customers * avgCost;
+  const foodCost = customers * avgCost * supplierCostMultiplier;
   const inflationMultiplier = 1 + economy.inflationRate;
 
   return Math.round((weeklyRent + weeklySalaries + foodCost) * inflationMultiplier);

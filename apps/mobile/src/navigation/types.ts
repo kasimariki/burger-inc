@@ -14,6 +14,7 @@ export type DashboardStackParamList = {
 export type StoresStackParamList = {
   StoreListScreen: undefined;
   StoreDetailScreen: { storeId: string };
+  CitiesScreen: undefined;
 };
 
 export type MenuStackParamList = {
@@ -27,6 +28,7 @@ export type StaffStackParamList = {
 export type FinanceStackParamList = {
   FinanceScreen: undefined;
   HistoryScreen: undefined;
+  SupplierScreen: undefined;
 };
 
 // ---- Bottom Tab params ----

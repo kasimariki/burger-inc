@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import type { Store, MenuItem, Staff } from "../game/models/types";
 import { useGameStore } from "../store/gameStore";
+import { calcStoreBreakdown } from "../game/engine/feedback";
 
 const C = {
   bg: "#0d1117",
@@ -35,6 +36,7 @@ type SheetType = "menu" | "staff" | null;
 export default function StoreDetailScreen({ store, onClose }: Props) {
   const { game, addMenuToStore, assignStaffToStore } = useGameStore();
   const [sheet, setSheet] = useState<SheetType>(null);
+  const breakdown = calcStoreBreakdown(store, game);
 
   const allMenuItems = Object.values(game.menu);
   const allStaff = Object.values(game.staff);
@@ -149,6 +151,36 @@ export default function StoreDetailScreen({ store, onClose }: Props) {
               ]}
             />
           </View>
+        </View>
+
+        {/* Reputation Breakdown Card */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>REPUTATION BREAKDOWN</Text>
+          {(
+            [
+              { label: "料理品質", value: breakdown.foodQuality },
+              { label: "接客速度", value: breakdown.serviceSpeed },
+              { label: "清潔さ",   value: breakdown.cleanliness },
+              { label: "コスパ",   value: breakdown.valueForMoney, warn: breakdown.valueForMoney < 50 },
+            ] as { label: string; value: number; warn?: boolean }[]
+          ).map(({ label, value, warn }) => {
+            const barColor = value >= 70 ? C.green : value >= 50 ? C.amber : C.red;
+            return (
+              <View key={label} style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>{label}</Text>
+                <View style={styles.breakdownBarBg}>
+                  <View
+                    style={[
+                      styles.breakdownBarFill,
+                      { width: `${value}%` as any, backgroundColor: barColor },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.breakdownValue, { color: barColor }]}>{value}</Text>
+                {warn && <Text style={styles.breakdownWarn}>⚠</Text>}
+              </View>
+            );
+          })}
         </View>
 
         {/* Menu Section */}
@@ -526,6 +558,41 @@ const styles = StyleSheet.create({
   staffName: { color: C.text, fontSize: 13, fontWeight: "800" },
   staffRole: { color: C.textMuted, fontSize: 11, marginTop: 1 },
   staffSalary: { color: C.amber, fontSize: 13, fontWeight: "800" },
+
+  // Reputation Breakdown
+  breakdownRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 8,
+  },
+  breakdownLabel: {
+    width: 56,
+    fontSize: 11,
+    color: C.textDim,
+    fontWeight: "700",
+  },
+  breakdownBarBg: {
+    flex: 1,
+    height: 6,
+    backgroundColor: C.bg,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  breakdownBarFill: {
+    height: "100%" as any,
+    borderRadius: 3,
+  },
+  breakdownValue: {
+    width: 28,
+    fontSize: 12,
+    fontWeight: "800",
+    textAlign: "right",
+  },
+  breakdownWarn: {
+    fontSize: 12,
+    color: C.amber,
+  },
 
   // Bottom Sheet
   sheetOverlay: {

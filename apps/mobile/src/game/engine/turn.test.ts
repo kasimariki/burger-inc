@@ -52,7 +52,7 @@ describe("processTurn", () => {
   });
 
   it("店舗がない場合、売上は0", () => {
-    const state = getInitialGameState();
+    const state = { ...getInitialGameState(), stores: {}, staff: {}, menu: {} };
     const next = processTurn(state);
     expect(next.finances.weeklyRevenue).toBe(0);
   });

@@ -69,6 +69,33 @@ export interface Staff {
   turnsEmployed: number;
 }
 
+// --- 都市 ---
+export type CityType = "downtown" | "suburb" | "tech_hub" | "tourist_zone" | "industrial" | "college_town";
+
+export interface CityDemographics {
+  thriftyWorker: number;   // 節約志向
+  qualityHunter: number;   // 品質重視
+  trendChaser: number;     // トレンド重視
+  familyCrew: number;      // ファミリー層
+}
+
+export interface CityStatus {
+  id: string;
+  name: string;
+  type: CityType;
+  rentMultiplier: number;
+  demographics: CityDemographics;
+  hasSeasonal: boolean;
+  notes: string | null;
+  isUnlocked: boolean;
+  canUnlock: boolean;
+  unlockProgress: {
+    brandScore: { current: number; required: number; ok: boolean };
+    storeCount: { current: number; required: number; ok: boolean };
+    cash:       { current: number; required: number; ok: boolean };
+  } | null;
+}
+
 // --- 店舗 ---
 export type StoreType = "street" | "mall" | "drive_through" | "food_truck";
 
@@ -76,6 +103,7 @@ export interface Store {
   id: StoreId;
   name: string;
   city: string;
+  cityId?: string;         // 都市ID（デフォルト: "midvale"）
   type: StoreType;
   rent: number;
   capacity: number;        // 最大客数/日
@@ -94,6 +122,28 @@ export interface Finances {
   netProfit: number;
   weeklyRevenue: number;
   weeklyExpenses: number;
+}
+
+// --- ブランド ---
+
+export type BrandPositioning = "value" | "standard" | "premium_fast_food" | "gourmet";
+
+export interface BrandProfile {
+  positioning: BrandPositioning;
+  brandScore: number;        // 0〜1000
+  brandConsistency: number;  // 0〜100
+  weeklyScoreDelta: number;
+}
+
+// --- サプライヤー ---
+
+export interface ActiveSupplier {
+  id: string;
+  name: string;
+  description: string;
+  costMultiplier: number;  // 食材コスト倍率（0.7 = 30%安, 1.3 = 30%高）
+  qualityBonus: number;    // tasteScore への加算（-10〜+20）
+  reliability: number;     // 0-100 サプライチェーン安定性
 }
 
 // --- マクロ経済 ---
@@ -144,9 +194,11 @@ export interface GameState {
   menu: Record<MenuItemId, MenuItem>;
   ingredients: Record<IngredientId, Ingredient>;
   economy: MacroEconomy;
-  brandScore: number;       // 0-100
+  brandScore: number;       // 0-100（イベントシステム用・既存互換）
+  brandProfile: BrandProfile;
   events: GameEvent[];
   activeEvents: GameEvent[]; // 現在影響中のイベント
+  activeSupplier?: ActiveSupplier | null;
 }
 
 // --- API ---
