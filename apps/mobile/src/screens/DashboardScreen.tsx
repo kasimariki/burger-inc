@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useGameStore } from "../store/gameStore";
+import { fetchBrandProfile, type BrandProfile } from "../services/api";
 import TurnResultModal from "./TurnResultModal";
 import type { DashboardStackParamList } from "../navigation/types";
 import { C } from "../theme";
@@ -25,10 +26,22 @@ const PHASE_STYLE = {
 
 type NavProp = NativeStackNavigationProp<DashboardStackParamList, "DashboardScreen">;
 
+const POSITIONING_LABELS: Record<string, { label: string; color: string }> = {
+  value: { label: "VALUE", color: C.green },
+  standard: { label: "STANDARD", color: C.teal },
+  premium_fast_food: { label: "PREMIUM", color: C.amber },
+  gourmet: { label: "GOURMET", color: C.accent },
+};
+
 export default function DashboardScreen() {
   const navigation = useNavigation<NavProp>();
-  const { game, prevGame, processTurn, save, load, isSaving } = useGameStore();
+  const { game, prevGame, processTurn, save, load, isSaving, userId } = useGameStore();
   const [showTurnResult, setShowTurnResult] = useState(false);
+  const [brandProfile, setBrandProfile] = useState<BrandProfile | null>(null);
+
+  useEffect(() => {
+    fetchBrandProfile(userId, 1).then(setBrandProfile).catch(() => undefined);
+  }, [game.turn]);
 
   const stores = Object.values(game.stores);
   const menus = Object.values(game.menu);
@@ -187,11 +200,33 @@ export default function DashboardScreen() {
       <View style={styles.card}>
         <View style={styles.brandRow}>
           <Text style={styles.cardLabel}>BRAND POWER</Text>
-          <Text style={styles.brandNum}>{game.brandScore}/100</Text>
+          <Text style={styles.brandNum}>{brandProfile?.brandScore ?? game.brandScore}</Text>
         </View>
         <View style={styles.brandBarBg}>
-          <View style={[styles.brandBarFill, { width: `${game.brandScore}%` as any }]} />
+          <View style={[styles.brandBarFill, { width: `${Math.min(100, (brandProfile?.brandScore ?? game.brandScore) / 10)}%` as any }]} />
         </View>
+        {brandProfile && (
+          <View style={styles.brandDetails}>
+            <View style={styles.brandDetailItem}>
+              <Text style={[styles.brandDetailVal, { color: POSITIONING_LABELS[brandProfile.positioning]?.color ?? C.teal }]}>
+                {POSITIONING_LABELS[brandProfile.positioning]?.label ?? brandProfile.positioning}
+              </Text>
+              <Text style={styles.brandDetailLabel}>Position</Text>
+            </View>
+            <View style={styles.brandDetailItem}>
+              <Text style={[styles.brandDetailVal, { color: brandProfile.brandConsistency >= 60 ? C.green : C.red }]}>
+                {brandProfile.brandConsistency}%
+              </Text>
+              <Text style={styles.brandDetailLabel}>Consistency</Text>
+            </View>
+            <View style={styles.brandDetailItem}>
+              <Text style={[styles.brandDetailVal, { color: brandProfile.weeklyScoreDelta >= 0 ? C.green : C.red }]}>
+                {brandProfile.weeklyScoreDelta >= 0 ? "+" : ""}{brandProfile.weeklyScoreDelta}
+              </Text>
+              <Text style={styles.brandDetailLabel}>Weekly</Text>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Quick Actions */}
@@ -338,6 +373,10 @@ const styles = StyleSheet.create({
   brandNum: { fontSize: 15, fontWeight: "800", color: C.accent },
   brandBarBg: { height: 6, backgroundColor: C.bg, borderRadius: 3, overflow: "hidden" },
   brandBarFill: { height: "100%", backgroundColor: C.accent, borderRadius: 3 },
+  brandDetails: { flexDirection: "row", marginTop: 10, gap: 8 },
+  brandDetailItem: { flex: 1, backgroundColor: C.bg, borderRadius: 8, padding: 8, alignItems: "center" },
+  brandDetailVal: { fontSize: 13, fontWeight: "800" },
+  brandDetailLabel: { fontSize: 8, color: C.textMuted, fontWeight: "600", marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" },
 
   // Actions
   actionGrid: { flexDirection: "row", gap: 8, marginBottom: 12 },
