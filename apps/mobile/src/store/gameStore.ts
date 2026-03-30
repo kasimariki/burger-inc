@@ -3,7 +3,7 @@ import type { GameState } from "../game/models/types";
 import { getInitialGameState, processTurn } from "../game/engine/turn";
 import { openStore, hireStaff, addMenuItem, assignStaffToStore, addMenuToStore } from "../game/engine/actions";
 import { buildBurger, initializeIngredients } from "../game/engine/menu-builder";
-import { saveGame, loadGame } from "../services/api";
+import { saveGame, loadGame, saveTurnSnapshot } from "../services/api";
 import { saveLocal, loadLocal } from "../services/local-storage";
 
 const USER_ID = "user-001"; // 後でAuth実装
@@ -31,8 +31,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   processTurn: () => {
     set((s) => ({ prevGame: s.game, game: processTurn(s.game) }));
-    // ターン進行ごとにオートセーブ（非同期・エラーは無視）
-    saveLocal(get().game).catch(() => undefined);
+    const g = get().game;
+    // ターン進行ごとにオートセーブ + スナップショット送信（非同期・エラーは無視）
+    saveLocal(g).catch(() => undefined);
+    const stores = Object.values(g.stores);
+    const avgRep = stores.length > 0
+      ? stores.reduce((sum, s) => sum + s.reputation, 0) / stores.length
+      : 0;
+    saveTurnSnapshot(USER_ID, 1, {
+      turnNumber: g.turn,
+      cash: g.finances.cash,
+      weeklyRevenue: g.finances.weeklyRevenue,
+      weeklyExpenses: g.finances.weeklyExpenses,
+      netProfit: g.finances.weeklyRevenue - g.finances.weeklyExpenses,
+      avgReputation: avgRep,
+      storeCount: stores.length,
+      brandScore: g.brandScore,
+    }).catch(() => undefined);
   },
 
   openStore: (store) =>

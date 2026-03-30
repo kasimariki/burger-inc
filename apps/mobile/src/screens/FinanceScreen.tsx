@@ -2,12 +2,19 @@ import {
   View,
   Text,
   ScrollView,
+  TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useGameStore } from "../store/gameStore";
 import { C } from "../theme";
+import type { FinanceStackParamList } from "../navigation/types";
+
+type NavProp = NativeStackNavigationProp<FinanceStackParamList, "FinanceScreen">;
 
 export default function FinanceScreen() {
+  const navigation = useNavigation<NavProp>();
   const { game } = useGameStore();
 
   return (
@@ -82,6 +89,14 @@ export default function FinanceScreen() {
         </View>
       </View>
 
+      {/* History link */}
+      <TouchableOpacity
+        style={styles.historyBtn}
+        onPress={() => navigation.navigate("HistoryScreen")}
+      >
+        <Text style={styles.historyBtnText}>VIEW TURN HISTORY</Text>
+      </TouchableOpacity>
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -108,4 +123,7 @@ const styles = StyleSheet.create({
   tblLabel: { fontSize: 13, color: C.textDim },
   tblValue: { fontSize: 13, color: C.textDim },
   tblValueBold: { fontSize: 13, color: C.text, fontWeight: "800" },
+
+  historyBtn: { backgroundColor: C.teal, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 4 },
+  historyBtnText: { color: "#fff", fontSize: 13, fontWeight: "800", letterSpacing: 1 },
 });

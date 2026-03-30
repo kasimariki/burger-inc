@@ -25,6 +25,9 @@ import StoreDetailScreen from "../screens/StoreDetailScreen";
 import MenuListScreen from "../screens/MenuListScreen";
 import StaffListScreen from "../screens/StaffListScreen";
 import FinanceScreen from "../screens/FinanceScreen";
+import CampaignScreen from "../screens/CampaignScreen";
+import HQScreen from "../screens/HQScreen";
+import HistoryScreen from "../screens/HistoryScreen";
 
 // ---- Stack Navigators ----
 
@@ -70,6 +73,16 @@ function DashboardTabStack() {
         name="HireScreen"
         component={HireScreenWrapper}
         options={{ title: "Hire Staff", presentation: "modal" }}
+      />
+      <DashboardStack.Screen
+        name="CampaignScreen"
+        component={CampaignScreen}
+        options={{ title: "Marketing" }}
+      />
+      <DashboardStack.Screen
+        name="HQScreen"
+        component={HQScreen}
+        options={{ title: "Headquarters" }}
       />
     </DashboardStack.Navigator>
   );
@@ -131,6 +144,11 @@ function FinanceTabStack() {
         name="FinanceScreen"
         component={FinanceScreen}
         options={{ title: "Finance" }}
+      />
+      <FinanceStack.Screen
+        name="HistoryScreen"
+        component={HistoryScreen}
+        options={{ title: "Turn History" }}
       />
     </FinanceStack.Navigator>
   );

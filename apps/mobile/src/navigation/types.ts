@@ -7,6 +7,8 @@ export type DashboardStackParamList = {
   OpenStoreScreen: undefined;
   MenuLabScreen: undefined;
   HireScreen: undefined;
+  CampaignScreen: undefined;
+  HQScreen: undefined;
 };
 
 export type StoresStackParamList = {
@@ -24,6 +26,7 @@ export type StaffStackParamList = {
 
 export type FinanceStackParamList = {
   FinanceScreen: undefined;
+  HistoryScreen: undefined;
 };
 
 // ---- Bottom Tab params ----

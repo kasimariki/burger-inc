@@ -219,6 +219,24 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Strategy Actions */}
+      <View style={styles.actionGrid}>
+        <TouchableOpacity
+          style={[styles.actionCard, { backgroundColor: "#5bb8d0" }]}
+          onPress={() => navigation.navigate("CampaignScreen")}
+        >
+          <Text style={styles.actIcon}>AD</Text>
+          <Text style={styles.actLabel}>Marketing</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionCard, { backgroundColor: "#a78bfa" }]}
+          onPress={() => navigation.navigate("HQScreen")}
+        >
+          <Text style={styles.actIcon}>HQ</Text>
+          <Text style={styles.actLabel}>Headquarters</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Turn */}
       <TouchableOpacity
         style={styles.turnBtn}
